@@ -1,0 +1,21 @@
+# ServiceMonitor for Prometheus Operator
+# Requires: prometheus-operator CRDs installed
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mcp-server
+  labels:
+    app: mcp-server
+    release: prometheus  # Match your Prometheus Operator release label
+spec:
+  selector:
+    matchLabels:
+      app: mcp-server
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+      - default  # Update to your namespace

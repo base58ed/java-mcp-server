@@ -1,0 +1,24 @@
+version: "1.0"
+
+profile:
+  name: qodana.recommended
+
+projectJDK: "25"
+
+linter: jetbrains/qodana-jvm:2025.3
+
+exclude:
+  - name: All
+    paths:
+      - pom.xml
+  - name: JvmCoverageInspection
+
+failureConditions:
+  severityThresholds:
+    any: 100
+    critical: 0
+    high: 50
+    moderate: 50
+  testCoverageThresholds:
+    fresh: 80
+    total: 70

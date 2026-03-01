@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-config
+  labels:
+    app: mcp-server
+data:
+  otel-endpoint: "http://otel-collector.monitoring:4318"
