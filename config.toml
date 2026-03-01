@@ -1,0 +1,48 @@
+[server]
+host = "0.0.0.0"
+port = 8181
+shutdown-timeout-seconds = 30
+drain-delay-ms = 3000
+
+[server.cors]
+enabled = true
+origins = ["*"]
+methods = ["GET", "POST", "OPTIONS"]
+
+[mcp]
+name = "java-mcp-server"
+version = "1.0.0"
+description = "Production-ready MCP server template with weather tools"
+
+[client.weather-api]
+base-url = "https://api.weatherapi.com"
+connect-timeout-ms = 5000
+response-timeout-ms = 10000
+pool-size = 20
+
+[resilience]
+max-retries = 3
+retry-delay-ms = 500
+retry-jitter-ms = 200
+circuit-breaker-failure-threshold = 5
+circuit-breaker-failure-count = 10
+circuit-breaker-delay-ms = 30000
+
+[telemetry]
+enabled = false
+
+[telemetry.traces]
+enabled = false
+endpoint = "http://localhost:4318/v1/traces"
+sampler-ratio = 1.0
+
+[telemetry.metrics]
+enabled = false
+path = "/metrics"
+
+[logging]
+level = "INFO"
+
+[logging.categories]
+"io.mcpbridge" = "INFO"
+"io.undertow" = "WARN"
