@@ -2,6 +2,7 @@ package io.mcpbridge.mcp.observability;
 
 import io.mcpbridge.mcp.common.TraceIdGen;
 import org.apache.logging.log4j.ThreadContext;
+import reactor.core.scheduler.Schedulers;
 
 /// Request-scoped correlation ID using ScopedValue.
 ///
@@ -11,6 +12,7 @@ import org.apache.logging.log4j.ThreadContext;
 /// ```
 ///
 /// Automatically sets Log4j2 ThreadContext so log patterns can include `%X{correlationId}`.
+/// Call {@link #installReactorHook()} once at startup to propagate across Reactor scheduler boundaries.
 public final class CorrelationId {
 
   private CorrelationId() {}
@@ -38,6 +40,23 @@ public final class CorrelationId {
       } finally {
         ThreadContext.remove(LOG_KEY);
       }
+    });
+  }
+
+  /// Propagates Log4j2 ThreadContext (MDC) across Reactor scheduler boundaries.
+  /// Call once at startup before any Reactor usage.
+  public static void installReactorHook() {
+    Schedulers.onScheduleHook("mdc-propagation", runnable -> {
+      var snapshot = ThreadContext.getImmutableContext();
+      if (snapshot.isEmpty()) { return runnable; }
+      return () -> {
+        ThreadContext.putAll(snapshot);
+        try {
+          runnable.run();
+        } finally {
+          ThreadContext.clearAll();
+        }
+      };
     });
   }
 }

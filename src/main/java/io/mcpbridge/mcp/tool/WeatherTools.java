@@ -6,6 +6,8 @@ import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
 import io.modelcontextprotocol.spec.McpSchema.TextContent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.Map;
 /// 4. Add it to `all()`
 public final class WeatherTools {
 
+  private static final Logger log = LogManager.getLogger();
   private static final int MAX_QUERY_LENGTH = 100;
   private static final JsonMapper JSON = JsonMapper.builder().build();
 
@@ -58,6 +61,7 @@ public final class WeatherTools {
       if (unit.isBlank()) { return errorResult("Unit is required (celsius or fahrenheit)"); }
       if (client == null) { return errorResult("Weather API not configured (set WEATHER_API_KEY)"); }
 
+      log.info("tool=getCurrentWeather city={}", city);
       return switch (client.getCurrentWeather(city)) {
         case Result.Ok(var weather) -> {
           boolean useFahrenheit = "fahrenheit".equalsIgnoreCase(unit) || "f".equalsIgnoreCase(unit);
@@ -69,9 +73,13 @@ public final class WeatherTools {
               current.humidity(), current.condition().text(),
               current.windKph(),
               useFahrenheit ? current.feelslikeF() : current.feelslikeC());
+          log.info("tool=getCurrentWeather city={} result=ok", city);
           yield successResult(data);
         }
-        case Result.Err(var f) -> errorResult(f.message());
+        case Result.Err(var f) -> {
+          log.warn("tool=getCurrentWeather city={} result=err reason={}", city, f.message());
+          yield errorResult(f.message());
+        }
       };
     });
   }
@@ -100,6 +108,7 @@ public final class WeatherTools {
 
       int days = Math.clamp(daysRaw instanceof Number n ? n.intValue() : 3, 1, 7);
 
+      log.info("tool=getForecast city={} days={}", city, days);
       return switch (client.getForecast(city, days)) {
         case Result.Ok(var forecast) -> {
           var dayForecasts = forecast.forecast().forecastDay().stream()
@@ -109,9 +118,13 @@ public final class WeatherTools {
               .toList();
           var data = new ForecastResult(
               forecast.location().name(), forecast.location().country(), dayForecasts);
+          log.info("tool=getForecast city={} days={} result=ok", city, days);
           yield successResult(data);
         }
-        case Result.Err(var f) -> errorResult(f.message());
+        case Result.Err(var f) -> {
+          log.warn("tool=getForecast city={} result=err reason={}", city, f.message());
+          yield errorResult(f.message());
+        }
       };
     });
   }
@@ -134,14 +147,19 @@ public final class WeatherTools {
       if (query.length() > MAX_QUERY_LENGTH) { return errorResult("Search query exceeds maximum length (" + MAX_QUERY_LENGTH + " chars)"); }
       if (client == null) { return errorResult("Weather API not configured (set WEATHER_API_KEY)"); }
 
+      log.info("tool=searchLocations query={}", query);
       return switch (client.searchLocations(query)) {
         case Result.Ok(var locations) -> {
           var matches = locations.stream()
               .map(loc -> new LocationMatch(loc.name(), loc.region(), loc.country(), loc.lat(), loc.lon()))
               .toList();
+          log.info("tool=searchLocations query={} result=ok matches={}", query, matches.size());
           yield successResult(new LocationSearchResult(query, matches));
         }
-        case Result.Err(var f) -> errorResult(f.message());
+        case Result.Err(var f) -> {
+          log.warn("tool=searchLocations query={} result=err reason={}", query, f.message());
+          yield errorResult(f.message());
+        }
       };
     });
   }

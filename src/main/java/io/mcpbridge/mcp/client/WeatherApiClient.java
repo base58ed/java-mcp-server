@@ -96,9 +96,15 @@ public final class WeatherApiClient implements AutoCloseable {
         return reader.read(response);
       });
     }));
-    double seconds = (System.nanoTime() - start) / 1_000_000_000.0;
+    long durationMs = (System.nanoTime() - start) / 1_000_000;
+    double seconds = durationMs / 1000.0;
     metrics.recordRequest(path, result.isOk() ? "success" : "error");
     metrics.recordDuration(path, seconds);
+    if (result.isOk()) {
+      log.info("api call={} duration={}ms result=ok", path, durationMs);
+    } else {
+      log.warn("api call={} duration={}ms result=err", path, durationMs);
+    }
     return result;
   }
 

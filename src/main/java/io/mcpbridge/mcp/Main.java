@@ -4,6 +4,7 @@ import io.mcpbridge.mcp.config.Config;
 import io.mcpbridge.mcp.config.ConfigLoader;
 import io.mcpbridge.mcp.lifecycle.GracefulShutdown;
 import io.mcpbridge.mcp.observability.ClientMetrics;
+import io.mcpbridge.mcp.observability.CorrelationId;
 import io.mcpbridge.mcp.observability.MetricsHandler;
 import io.mcpbridge.mcp.observability.Telemetry;
 import io.mcpbridge.mcp.server.McpServerFactory;
@@ -28,6 +29,7 @@ public final class Main {
         ? ConfigLoader.loadAs(configPath, Config.class)
             .expect("Failed to parse " + configPath)
         : new Config(null, null, null, null, null, null);
+    log.info("config loaded from {}", Files.exists(configPath) ? configPath.toAbsolutePath() : "defaults");
 
     // Apply TOML log levels — overrides log4j2.xml defaults
     Configurator.setRootLevel(Level.toLevel(config.logging().level()));
@@ -42,7 +44,12 @@ public final class Main {
         config.mcp().name(), config.mcp().version());
 
     var clientMetrics = new ClientMetrics(telemetry.meter());
-    var secrets = ConfigLoader.loadSecrets(Path.of(".env"));
+    var envPath = Path.of(".env");
+    var secrets = ConfigLoader.loadSecrets(envPath);
+    log.info("secrets loaded from {}", Files.exists(envPath) ? envPath.toAbsolutePath() : "environment only");
+
+    CorrelationId.installReactorHook();
+
     var mcp = McpServerFactory.create(config, secrets, clientMetrics);
     var server = UndertowServer.create(config.server(), shutdown, telemetry);
     mcp.mountRoutes(server.routes());
