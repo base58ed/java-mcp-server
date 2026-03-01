@@ -8,7 +8,7 @@ import io.opentelemetry.api.metrics.Meter;
 
 /// MCP-specific metrics using OTel Meter API.
 ///
-/// Tracks tool invocations, durations, and payload sizes.
+/// Tracks tool invocations and durations.
 /// When telemetry is disabled, Meter is noop — all recording calls are zero-cost.
 public final class McpMetrics {
 

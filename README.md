@@ -434,11 +434,10 @@ All other config uses `config.toml`. Override any TOML value via env var or `.en
 
 Prometheus metrics at `/metrics` (when `telemetry.metrics.enabled = true`):
 
-| Metric | Type | Labels | Purpose |
-|--------|------|--------|---------|
-| `mcp_tool_calls_total` | Counter | `tool`, `status` | Tool invocation count |
-| `mcp_tool_duration_seconds` | Histogram | `tool` | Latency distribution |
-| `mcp_tool_payload_bytes_total` | Counter | `tool`, `direction` | Request/response size |
+| OTel Instrument | Prometheus Name | Type | Labels | Purpose |
+|-----------------|-----------------|------|--------|---------|
+| `mcp.tool.calls` | `mcp_tool_calls_total` | Counter | `tool`, `status` | Tool invocation count |
+| `mcp.tool.duration` | `mcp_tool_duration_seconds` | Histogram | `tool` | Latency distribution |
 
 ```promql
 # Error rate by tool

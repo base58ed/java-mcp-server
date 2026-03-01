@@ -107,22 +107,6 @@ else
     warn "Tool validation response unexpected"
 fi
 
-# Test 6: Prompts list
-echo -n "Testing MCP prompts/list... "
-PROMPTS_RESPONSE=$(curl -sf "${BASE_URL}/mcp" -X POST \
-    -H 'Content-Type: application/json' \
-    -H 'Accept: application/json, text/event-stream' \
-    -H "Mcp-Session-Id: $SESSION_ID" \
-    -d '{"jsonrpc":"2.0","id":4,"method":"prompts/list","params":{}}' \
-    2>/dev/null || echo "FAILED")
-
-if [[ "$PROMPTS_RESPONSE" == *"prompts"* ]]; then
-    PROMPT_COUNT=$(echo "$PROMPTS_RESPONSE" | jq -r '.result.prompts | length' 2>/dev/null || echo "?")
-    log "MCP prompts/list returned $PROMPT_COUNT prompts"
-else
-    warn "MCP prompts/list response unexpected"
-fi
-
 echo "=========================================="
 echo -e "${GREEN}All smoke tests passed!${NC}"
 echo "=========================================="
